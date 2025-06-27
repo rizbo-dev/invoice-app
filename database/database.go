@@ -20,6 +20,14 @@ func Initialize() (*sql.DB, error) {
 
 func createTables(db *sql.DB) error {
 	schemas := []string{
+		`CREATE TABLE IF NOT EXISTS customers (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			phone TEXT NOT NULL,
+			address TEXT NOT NULL,
+			country TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 		`CREATE TABLE IF NOT EXISTS products (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL,
@@ -28,10 +36,12 @@ func createTables(db *sql.DB) error {
 		)`,
 		`CREATE TABLE IF NOT EXISTS invoices (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			customer_id INTEGER,
 			total_price DECIMAL(10,2) NOT NULL,
 			status TEXT CHECK(status IN ('created', 'processed', 'deleted')) DEFAULT 'created',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			processed_at DATETIME NULL
+			processed_at DATETIME NULL,
+			FOREIGN KEY (customer_id) REFERENCES customers(id)
 		)`,
 		`CREATE TABLE IF NOT EXISTS invoice_items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,

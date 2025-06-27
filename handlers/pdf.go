@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"invoice-app/models"
 	"github.com/gorilla/mux"
 	"github.com/jung-kurt/gofpdf"
 )
@@ -22,6 +24,7 @@ type InvoicePDFData struct {
 	Items       []InvoiceItemPDF
 	TotalItems  int
 	GeneratedAt string
+	Customer    *models.Customer
 }
 
 type InvoiceItemPDF struct {
@@ -39,19 +42,39 @@ func (h *Handler) GenerateInvoicePDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch invoice data
+	// Fetch invoice data with customer information
 	var invoice struct {
 		ID          int
+		CustomerID  *int
 		TotalPrice  float64
 		Status      string
 		CreatedAt   time.Time
 		ProcessedAt *time.Time
+		Customer    *models.Customer
 	}
-	err = h.db.QueryRow("SELECT id, total_price, status, created_at, processed_at FROM invoices WHERE id = ?", id).
-		Scan(&invoice.ID, &invoice.TotalPrice, &invoice.Status, &invoice.CreatedAt, &invoice.ProcessedAt)
+	var customerName, customerPhone, customerAddress, customerCountry sql.NullString
+	err = h.db.QueryRow(`
+		SELECT i.id, i.customer_id, i.total_price, i.status, i.created_at, i.processed_at,
+		       c.name, c.phone, c.address, c.country
+		FROM invoices i 
+		LEFT JOIN customers c ON i.customer_id = c.id 
+		WHERE i.id = ?`, id).
+		Scan(&invoice.ID, &invoice.CustomerID, &invoice.TotalPrice, &invoice.Status, &invoice.CreatedAt, &invoice.ProcessedAt,
+			&customerName, &customerPhone, &customerAddress, &customerCountry)
 	if err != nil {
 		http.Error(w, "Invoice not found", http.StatusNotFound)
 		return
+	}
+
+	// Add customer info if available
+	if invoice.CustomerID != nil && customerName.Valid {
+		invoice.Customer = &models.Customer{
+			ID:      *invoice.CustomerID,
+			Name:    customerName.String,
+			Phone:   customerPhone.String,
+			Address: customerAddress.String,
+			Country: customerCountry.String,
+		}
 	}
 
 	// Fetch invoice items
@@ -91,6 +114,7 @@ func (h *Handler) GenerateInvoicePDF(w http.ResponseWriter, r *http.Request) {
 		Items:       items,
 		TotalItems:  totalItems,
 		GeneratedAt: time.Now().Format("January 2, 2006 at 3:04 PM"),
+		Customer:    invoice.Customer,
 	}
 	
 	if invoice.ProcessedAt != nil {
@@ -154,6 +178,16 @@ func (h *Handler) generateInvoiceHTML(data InvoicePDFData) (string, error) {
     <div class="header">
         <h1>INVOICE</h1>
     </div>
+    
+    {{if .Customer}}
+    <div style="margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+        <h2 style="color: #2c3e50; margin-bottom: 15px;">BILL TO:</h2>
+        <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">{{.Customer.Name}}</div>
+        <div style="margin-bottom: 4px;">Phone: {{.Customer.Phone}}</div>
+        <div style="margin-bottom: 4px;">Address: {{.Customer.Address}}</div>
+        <div>Country: {{.Customer.Country}}</div>
+    </div>
+    {{end}}
     
     <div class="info-grid">
         <div class="info-box">
@@ -240,6 +274,28 @@ func (h *Handler) htmlToPDF(htmlContent string, data InvoicePDFData) *gofpdf.Fpd
 	pdf.SetFont("Arial", "B", 24)
 	pdf.Cell(190, 12, "INVOICE")
 	pdf.Ln(20)
+	
+	// Customer Information Section
+	if data.Customer != nil {
+		pdf.SetFont("Arial", "B", 14)
+		pdf.SetTextColor(44, 62, 80)
+		pdf.Cell(190, 8, "BILL TO:")
+		pdf.Ln(10)
+		
+		pdf.SetFont("Arial", "B", 12)
+		pdf.SetTextColor(0, 0, 0)
+		pdf.Cell(190, 6, data.Customer.Name)
+		pdf.Ln(6)
+		
+		pdf.SetFont("Arial", "", 10)
+		pdf.SetTextColor(70, 70, 70)
+		pdf.Cell(190, 5, fmt.Sprintf("Phone: %s", data.Customer.Phone))
+		pdf.Ln(5)
+		pdf.Cell(190, 5, fmt.Sprintf("Address: %s", data.Customer.Address))
+		pdf.Ln(5)
+		pdf.Cell(190, 5, fmt.Sprintf("Country: %s", data.Customer.Country))
+		pdf.Ln(15)
+	}
 	
 	// Invoice Info Grid
 	pdf.SetFont("Arial", "", 9)

@@ -20,6 +20,12 @@ func main() {
 	h := handlers.New(db)
 	r := mux.NewRouter()
 
+	r.HandleFunc("/api/customers", h.GetCustomers).Methods("GET")
+	r.HandleFunc("/api/customers", h.CreateCustomer).Methods("POST")
+	r.HandleFunc("/api/customers/{id}", h.GetCustomer).Methods("GET")
+	r.HandleFunc("/api/customers/{id}", h.UpdateCustomer).Methods("PUT")
+	r.HandleFunc("/api/customers/{id}", h.DeleteCustomer).Methods("DELETE")
+
 	r.HandleFunc("/api/products", h.GetProducts).Methods("GET")
 	r.HandleFunc("/api/products", h.CreateProduct).Methods("POST")
 	r.HandleFunc("/api/products/{id}", h.GetProduct).Methods("GET")

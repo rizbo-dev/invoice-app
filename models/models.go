@@ -4,6 +4,15 @@ import (
 	"time"
 )
 
+type Customer struct {
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Phone     string    `json:"phone"`
+	Address   string    `json:"address"`
+	Country   string    `json:"country"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Product struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name"`
@@ -13,6 +22,8 @@ type Product struct {
 
 type Invoice struct {
 	ID          int              `json:"id"`
+	CustomerID  *int             `json:"customer_id,omitempty"`
+	Customer    *Customer        `json:"customer,omitempty"`
 	TotalPrice  float64          `json:"total_price"`
 	Status      string           `json:"status"`
 	CreatedAt   time.Time        `json:"created_at"`
@@ -31,7 +42,8 @@ type InvoiceItem struct {
 }
 
 type CreateInvoiceRequest struct {
-	Items []CreateInvoiceItem `json:"items"`
+	CustomerID int                 `json:"customer_id"`
+	Items      []CreateInvoiceItem `json:"items"`
 }
 
 type CreateInvoiceItem struct {

@@ -1,4 +1,5 @@
 let products = [];
+let customers = [];
 let currentInvoice = null;
 let invoiceItems = [];
 
@@ -9,6 +10,28 @@ async function loadProducts() {
     } catch (error) {
         console.error('Error loading products:', error);
     }
+}
+
+async function loadCustomers() {
+    try {
+        const response = await fetch('/api/customers');
+        customers = await response.json();
+        populateCustomerSelect();
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
+}
+
+function populateCustomerSelect() {
+    const select = document.getElementById('customer-select');
+    select.innerHTML = '<option value="">Choose a customer...</option>';
+    
+    customers.forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer.id;
+        option.textContent = `${customer.name} - ${customer.phone}`;
+        select.appendChild(option);
+    });
 }
 
 async function loadInvoices() {
@@ -43,9 +66,11 @@ function displayInvoices(invoices) {
     tbody.innerHTML = '';
     
     invoices.forEach(invoice => {
+        const customerInfo = invoice.customer ? invoice.customer.name : 'No Customer';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap">${invoice.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${customerInfo}</td>
             <td class="px-6 py-4 whitespace-nowrap">$${invoice.total_price.toFixed(2)}</td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
@@ -85,6 +110,9 @@ function showCreateModal() {
     invoiceItems = [];
     document.getElementById('invoice-items').innerHTML = '';
     document.getElementById('invoice-total').textContent = '0.00';
+    document.getElementById('customer-select').value = '';
+    document.getElementById('customer-error').classList.add('hidden');
+    document.getElementById('customer-select').classList.remove('border-red-500');
     addInvoiceItem();
     document.getElementById('create-modal').classList.remove('hidden');
 }
@@ -127,6 +155,14 @@ function updateTotal() {
 }
 
 async function saveInvoice() {
+    // Validate customer selection
+    const customerId = document.getElementById('customer-select').value;
+    if (!customerId) {
+        document.getElementById('customer-select').classList.add('border-red-500');
+        document.getElementById('customer-error').classList.remove('hidden');
+        return;
+    }
+    
     const items = [];
     const itemDivs = document.querySelectorAll('#invoice-items > div');
     
@@ -151,14 +187,19 @@ async function saveInvoice() {
         const response = await fetch('/api/invoices', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items })
+            body: JSON.stringify({ 
+                customer_id: parseInt(customerId),
+                items 
+            })
         });
         
         if (response.ok) {
             hideCreateModal();
             loadInvoices();
+            showSuccessToast('Invoice created successfully');
         } else {
-            alert('Error creating invoice');
+            const error = await response.text();
+            alert(error || 'Error creating invoice');
         }
     } catch (error) {
         console.error('Error saving invoice:', error);
@@ -173,7 +214,17 @@ async function viewInvoice(id) {
         currentInvoice = invoice;
         
         const detailsDiv = document.getElementById('invoice-details');
-        detailsDiv.innerHTML = `
+        const customerSection = invoice.customer ? `
+            <div class="mb-4 p-4 bg-gray-50 rounded">
+                <h3 class="font-semibold text-lg mb-2">Customer Information</h3>
+                <p><strong>Name:</strong> ${invoice.customer.name}</p>
+                <p><strong>Phone:</strong> ${invoice.customer.phone}</p>
+                <p><strong>Address:</strong> ${invoice.customer.address}</p>
+                <p><strong>Country:</strong> ${invoice.customer.country}</p>
+            </div>
+        ` : '<div class="mb-4 p-4 bg-red-50 rounded text-red-700">No customer information available</div>';
+        
+        detailsDiv.innerHTML = customerSection + `
             <div class="mb-4">
                 <p><strong>Invoice ID:</strong> ${invoice.id}</p>
                 <p><strong>Status:</strong> ${invoice.status}</p>
@@ -320,8 +371,20 @@ async function loadProductCount() {
     }
 }
 
+async function loadCustomerCount() {
+    try {
+        const response = await fetch('/api/customers');
+        const customers = await response.json();
+        document.getElementById('customer-count').textContent = customers.length;
+    } catch (error) {
+        console.error('Error loading customer count:', error);
+    }
+}
+
 window.addEventListener('load', async () => {
     await loadProducts();
+    await loadCustomers();
     await loadInvoices();
     await loadProductCount();
+    await loadCustomerCount();
 });

@@ -12,15 +12,24 @@
         
         <div class="mb-4 flex justify-between items-center">
             <div></div>
-            <button onclick="window.location.href='/products.html'" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Manage Products
-            </button>
+            <div class="flex gap-4">
+                <button onclick="window.location.href='/customers.html'" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    Manage Customers
+                </button>
+                <button onclick="window.location.href='/products.html'" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Manage Products
+                </button>
+            </div>
         </div>
         
-        <div class="mb-8 grid grid-cols-4 gap-4">
+        <div class="mb-8 grid grid-cols-5 gap-4">
             <div class="bg-white p-4 rounded shadow">
-                <h3 class="font-semibold text-lg">Total Products</h3>
-                <p class="text-2xl font-bold text-purple-600" id="product-count">0</p>
+                <h3 class="font-semibold text-lg">Customers</h3>
+                <p class="text-2xl font-bold text-purple-600" id="customer-count">0</p>
+            </div>
+            <div class="bg-white p-4 rounded shadow">
+                <h3 class="font-semibold text-lg">Products</h3>
+                <p class="text-2xl font-bold text-indigo-600" id="product-count">0</p>
             </div>
             <div class="bg-white p-4 rounded shadow">
                 <h3 class="font-semibold text-lg">Created</h3>
@@ -68,6 +77,10 @@
                     <input type="text" name="product_query" class="w-full px-3 py-2 border rounded">
                 </div>
                 <div>
+                    <label class="block text-sm font-medium mb-1">Customer Name</label>
+                    <input type="text" name="customer_query" class="w-full px-3 py-2 border rounded">
+                </div>
+                <div>
                     <label class="block text-sm font-medium mb-1">Status</label>
                     <div class="space-y-2">
                         <label class="inline-flex items-center mr-4">
@@ -103,6 +116,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created At</th>
@@ -119,6 +133,15 @@
     <div id="create-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg w-full max-w-2xl">
             <h2 class="text-xl font-semibold mb-4">Create New Invoice</h2>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-2">Select Customer <span class="text-red-500">*</span></label>
+                <select id="customer-select" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Choose a customer...</option>
+                </select>
+                <p id="customer-error" class="text-red-500 text-sm mt-1 hidden">Please select a customer</p>
+            </div>
+            
             <div id="invoice-items" class="space-y-4 mb-4">
             </div>
             <button onclick="addInvoiceItem()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-4">
