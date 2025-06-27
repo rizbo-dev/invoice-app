@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvoicePro - Professional Invoice Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/modern-professional.css">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="js/spa-router.js" as="script">
+    <link rel="preload" href="js/spa-app.js" as="script">
+    <link rel="preload" href="js/modern-interactions.js" as="script">
+    
+    <!-- Meta tags for better SEO and PWA -->
+    <meta name="description" content="Professional invoice management system for modern businesses">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+    <!-- App Shell - Persistent UI Elements -->
+    <div id="app" class="min-h-screen flex flex-col">
+        <!-- Professional Header - Always visible -->
+        <header class="professional-header">
+            <div class="professional-container">
+                <div class="professional-header-content">
+                    <a href="#/dashboard" class="professional-logo">
+                        <span style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">📊</span>
+                            InvoicePro
+                        </span>
+                    </a>
+                    <nav class="professional-nav">
+                        <a href="#/dashboard" class="professional-nav-link">Dashboard</a>
+                        <a href="#/customers" class="professional-nav-link">Customers</a>
+                        <a href="#/products" class="professional-nav-link">Products</a>
+                        <button onclick="window.InvoiceProApp.showNotification('Quick invoice creation coming soon!', 'info')" 
+                                class="professional-btn professional-btn-success professional-btn-sm">
+                            <span>➕</span> New Invoice
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Breadcrumb Navigation - Updated dynamically -->
+        <div class="professional-container">
+            <div class="professional-breadcrumb">
+                <span>🏠 Dashboard</span>
+            </div>
+        </div>
+
+        <!-- Main Content Area - Dynamic view injection point -->
+        <main id="main-content" class="professional-container flex-1" style="padding-bottom: 2rem;">
+            <div id="app-content">
+                <!-- Initial loading state -->
+                <div class="professional-loading-view" style="min-height: 60vh; display: flex; align-items: center; justify-content: center;">
+                    <div style="text-align: center;">
+                        <div class="professional-loading" style="width: 64px; height: 64px; margin: 0 auto 1.5rem;"></div>
+                        <div style="font-size: 1.25rem; color: var(--gray-600); margin-bottom: 0.5rem;">Initializing InvoicePro...</div>
+                        <div style="font-size: 0.875rem; color: var(--gray-500);">Setting up your professional workspace</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer - Always visible -->
+        <footer style="background: var(--gray-50); border-top: 1px solid var(--gray-200); padding: 1.5rem 0; margin-top: auto;">
+            <div class="professional-container">
+                <div style="display: flex; justify-content: between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div style="color: var(--gray-600); font-size: 0.875rem;">
+                        © 2024 InvoicePro. Professional Invoice Management System.
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-left: auto;">
+                        <button onclick="window.InvoiceProApp.clearCache(); window.InvoiceProApp.showNotification('Cache cleared successfully', 'success')" 
+                                class="text-sm text-gray-600 hover:text-gray-900">
+                            Clear Cache
+                        </button>
+                        <button onclick="window.location.reload()" 
+                                class="text-sm text-gray-600 hover:text-gray-900">
+                            Refresh App
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Global Modals - Shared across all views -->
+    
+    <!-- Create Invoice Modal -->
+    <div id="create-invoice-modal" class="professional-modal-backdrop">
+        <div class="professional-modal" style="max-width: 800px;">
+            <div class="professional-modal-header">
+                <h2 class="professional-modal-title">Create New Invoice</h2>
+                <button class="professional-modal-close" onclick="window.closeModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="professional-modal-body">
+                <!-- Content will be injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Notification Container -->
+    <div id="toast-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 9999;"></div>
+
+    <!-- Core JavaScript Files -->
+    <script src="js/modern-interactions.js"></script>
+    <script src="js/spa-router.js"></script>
+    <script src="js/spa-app.js"></script>
+    
+    <!-- Initialize SPA -->
+    <script>
+        // Global error handler
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+            if (window.InvoiceProApp) {
+                window.InvoiceProApp.showNotification('An error occurred. Please try again.', 'error');
+            }
+        });
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e.reason);
+            if (window.InvoiceProApp) {
+                window.InvoiceProApp.showNotification('An error occurred. Please try again.', 'error');
+            }
+        });
+
+        // Performance tracking
+        window.addEventListener('load', () => {
+            // Log performance metrics
+            if ('performance' in window) {
+                const perfData = window.performance.timing;
+                const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+                console.log(`Page load time: ${pageLoadTime}ms`);
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + K for quick search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                // Implement quick search
+                console.log('Quick search triggered');
+            }
+            
+            // Ctrl/Cmd + N for new invoice
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                // Navigate to create invoice
+                window.location.hash = '#/invoices/new';
+            }
+        });
+
+        // Service Worker registration (for PWA support)
+        if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+            navigator.serviceWorker.register('/sw.js').then((registration) => {
+                console.log('Service Worker registered:', registration);
+            }).catch((error) => {
+                console.log('Service Worker registration failed:', error);
+            });
+        }
+    </script>
+
+    <!-- Preload view modules for faster navigation -->
+    <link rel="modulepreload" href="js/views/dashboard-view.js">
+    <link rel="modulepreload" href="js/views/customers-view.js">
+    <link rel="modulepreload" href="js/views/products-view.js">
+</body>
+</html>
