@@ -3,180 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Management System</title>
+    <title>Professional Invoice Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/modern-professional.css">
+    <script src="js/modern-interactions.js"></script>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-8">Invoice Management System</h1>
-        
-        <div class="mb-4 flex justify-between items-center">
-            <div></div>
-            <div class="flex gap-4">
-                <button onclick="window.location.href='/customers.html'" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
-                    Manage Customers
-                </button>
-                <button onclick="window.location.href='/products.html'" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                    Manage Products
-                </button>
+<body>
+    <!-- Professional Header -->
+    <header class="professional-header">
+        <div class="professional-container">
+            <div class="professional-header-content">
+                <a href="/" class="professional-logo">
+                    <span style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.5rem;">📊</span>
+                        InvoicePro
+                    </span>
+                </a>
+                <nav class="professional-nav">
+                    <a href="/" class="professional-nav-link">Dashboard</a>
+                    <a href="/customers.html" class="professional-nav-link">Customers</a>
+                    <a href="/products.html" class="professional-nav-link">Products</a>
+                    <button onclick="showCreateModal()" class="professional-btn professional-btn-success professional-btn-sm">
+                        <span>➕</span> New Invoice
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="professional-container">
+        <div class="professional-breadcrumb">
+            <span>🏠 Dashboard</span>
+        </div>
+    </div>
+
+    <main id="main-content" class="professional-container" style="padding-bottom: 2rem;">
+        <!-- Welcome Section -->
+        <div style="margin-bottom: 2rem;">
+            <h1 style="font-size: 2.25rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.5rem;">
+                Welcome to InvoicePro
+            </h1>
+            <p style="color: var(--gray-600); font-size: 1.125rem;">
+                Manage your business invoices with professional efficiency
+            </p>
+        </div>
+
+        <!-- Professional Metrics Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;" id="metrics-grid">
+            <div class="professional-metric-card">
+                <div class="professional-metric-title">Total Customers</div>
+                <div class="professional-metric-value" data-count="0" id="customer-count">0</div>
+                <div class="professional-metric-change positive">
+                    <span>👥</span>
+                    <span>Active clients</span>
+                </div>
+            </div>
+            <div class="professional-metric-card">
+                <div class="professional-metric-title">Total Products</div>
+                <div class="professional-metric-value" data-count="0" id="product-count">0</div>
+                <div class="professional-metric-change positive">
+                    <span>📦</span>
+                    <span>In catalog</span>
+                </div>
+            </div>
+            <div class="professional-metric-card">
+                <div class="professional-metric-title">Pending Invoices</div>
+                <div class="professional-metric-value" data-count="0" id="created-count">0</div>
+                <div class="professional-metric-change">
+                    <span>⏳</span>
+                    <span>Awaiting processing</span>
+                </div>
+            </div>
+            <div class="professional-metric-card">
+                <div class="professional-metric-title">Processed Invoices</div>
+                <div class="professional-metric-value" data-count="0" id="processed-count">0</div>
+                <div class="professional-metric-change positive">
+                    <span>✅</span>
+                    <span>Completed</span>
+                </div>
+            </div>
+            <div class="professional-metric-card">
+                <div class="professional-metric-title">Deleted Invoices</div>
+                <div class="professional-metric-value" data-count="0" id="deleted-count">0</div>
+                <div class="professional-metric-change negative">
+                    <span>🗑️</span>
+                    <span>Removed</span>
+                </div>
             </div>
         </div>
         
-        <div class="mb-8 grid grid-cols-5 gap-4">
-            <div class="bg-white p-4 rounded shadow">
-                <h3 class="font-semibold text-lg">Customers</h3>
-                <p class="text-2xl font-bold text-purple-600" id="customer-count">0</p>
+        <!-- Advanced Search & Filter Section -->
+        <div class="professional-card" style="margin-bottom: 2rem;">
+            <div class="professional-card-header">
+                <h2 class="professional-card-title">Advanced Search & Filters</h2>
+                <p class="professional-card-description">Find invoices quickly with powerful search options</p>
             </div>
-            <div class="bg-white p-4 rounded shadow">
-                <h3 class="font-semibold text-lg">Products</h3>
-                <p class="text-2xl font-bold text-indigo-600" id="product-count">0</p>
+            <div class="professional-card-content">
+                <form id="filter-form" class="professional-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div class="professional-form-group">
+                        <label class="professional-label">📅 Created From</label>
+                        <input type="date" name="created_from" class="professional-input">
+                    </div>
+                    <div class="professional-form-group">
+                        <label class="professional-label">📅 Created To</label>
+                        <input type="date" name="created_to" class="professional-input">
+                    </div>
+                    <div class="professional-form-group">
+                        <label class="professional-label">✅ Processed From</label>
+                        <input type="date" name="processed_from" class="professional-input">
+                    </div>
+                    <div class="professional-form-group">
+                        <label class="professional-label">✅ Processed To</label>
+                        <input type="date" name="processed_to" class="professional-input">
+                    </div>
+                    <div class="professional-form-group">
+                        <label class="professional-label">💰 Price From</label>
+                        <input type="number" step="0.01" name="price_from" class="professional-input" placeholder="0.00">
+                    </div>
+                    <div class="professional-form-group">
+                        <label class="professional-label">💰 Price To</label>
+                        <input type="number" step="0.01" name="price_to" class="professional-input" placeholder="0.00">
+                    </div>
+                    <div class="professional-form-group">
+                        <label class="professional-label">📦 Product Name</label>
+                        <input type="text" name="product_query" class="professional-input" placeholder="Search products...">
+                    </div>
+                    <div class="professional-form-group">
+                        <label class="professional-label">👤 Customer Name</label>
+                        <input type="text" name="customer_query" class="professional-input" placeholder="Search customers...">
+                    </div>
+                    <div class="professional-form-group">
+                        <label class="professional-label">📊 Status</label>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="status" value="created" style="accent-color: var(--primary-600);">
+                                <span class="professional-badge professional-badge-info">Created</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="status" value="processed" style="accent-color: var(--success-600);">
+                                <span class="professional-badge professional-badge-success">Processed</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="status" value="deleted" style="accent-color: var(--error-600);">
+                                <span class="professional-badge professional-badge-error">Deleted</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
             </div>
-            <div class="bg-white p-4 rounded shadow">
-                <h3 class="font-semibold text-lg">Created</h3>
-                <p class="text-2xl font-bold text-blue-600" id="created-count">0</p>
-            </div>
-            <div class="bg-white p-4 rounded shadow">
-                <h3 class="font-semibold text-lg">Processed</h3>
-                <p class="text-2xl font-bold text-green-600" id="processed-count">0</p>
-            </div>
-            <div class="bg-white p-4 rounded shadow">
-                <h3 class="font-semibold text-lg">Deleted</h3>
-                <p class="text-2xl font-bold text-red-600" id="deleted-count">0</p>
-            </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded shadow mb-8">
-            <h2 class="text-xl font-semibold mb-4">Search & Filter</h2>
-            <form id="filter-form" class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Created From</label>
-                    <input type="date" name="created_from" class="w-full px-3 py-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Created To</label>
-                    <input type="date" name="created_to" class="w-full px-3 py-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Processed From</label>
-                    <input type="date" name="processed_from" class="w-full px-3 py-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Processed To</label>
-                    <input type="date" name="processed_to" class="w-full px-3 py-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Price From</label>
-                    <input type="number" step="0.01" name="price_from" class="w-full px-3 py-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Price To</label>
-                    <input type="number" step="0.01" name="price_to" class="w-full px-3 py-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Product Name</label>
-                    <input type="text" name="product_query" class="w-full px-3 py-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Customer Name</label>
-                    <input type="text" name="customer_query" class="w-full px-3 py-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Status</label>
-                    <div class="space-y-2">
-                        <label class="inline-flex items-center mr-4">
-                            <input type="checkbox" name="status" value="created" class="mr-1">
-                            <span>Created</span>
-                        </label>
-                        <label class="inline-flex items-center mr-4">
-                            <input type="checkbox" name="status" value="processed" class="mr-1">
-                            <span>Processed</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="status" value="deleted" class="mr-1">
-                            <span>Deleted</span>
-                        </label>
+            <div class="professional-card-footer">
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button type="submit" form="filter-form" class="professional-btn professional-btn-primary">
+                        <span>🔍</span> Search Invoices
+                    </button>
+                    <button type="button" onclick="clearFilters()" class="professional-btn professional-btn-secondary">
+                        <span>🗑️</span> Clear Filters
+                    </button>
+                    <div style="margin-left: auto;">
+                        <button type="button" onclick="showCreateModal()" class="professional-btn professional-btn-success professional-btn-lg">
+                            <span>➕</span> Create New Invoice
+                        </button>
                     </div>
                 </div>
-                <div class="col-span-2 flex gap-4">
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        Search
-                    </button>
-                    <button type="button" onclick="clearFilters()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-                        Clear Filters
-                    </button>
-                    <button type="button" onclick="showCreateModal()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 ml-auto">
-                        Create New Invoice
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
         
-        <div class="bg-white rounded shadow">
-            <table class="w-full">
-                <thead class="bg-gray-50">
+        <!-- Professional Invoice Table -->
+        <div class="professional-table-container">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--gray-200);">
+                <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--gray-900); margin: 0;">Invoice Management</h2>
+                <p style="color: var(--gray-600); margin: 0.5rem 0 0 0;">View and manage all your business invoices</p>
+            </div>
+            <table class="professional-table">
+                <thead class="professional-table-header">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created At</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Processed At</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th data-sortable style="cursor: pointer;">📄 Invoice ID</th>
+                        <th data-sortable style="cursor: pointer;">👤 Customer</th>
+                        <th data-sortable style="cursor: pointer;">💰 Total Amount</th>
+                        <th data-sortable style="cursor: pointer;">📊 Status</th>
+                        <th data-sortable style="cursor: pointer;">📅 Created Date</th>
+                        <th data-sortable style="cursor: pointer;">✅ Processed Date</th>
+                        <th>⚡ Actions</th>
                     </tr>
                 </thead>
-                <tbody id="invoice-list" class="bg-white divide-y divide-gray-200">
+                <tbody id="invoice-list">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                            <div class="professional-loading" style="margin: 0 auto 1rem;"></div>
+                            <div>Loading invoices...</div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-    </div>
+    </main>
     
-    <div id="create-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg w-full max-w-2xl">
-            <h2 class="text-xl font-semibold mb-4">Create New Invoice</h2>
-            
-            <div class="mb-6">
-                <label class="block text-sm font-medium mb-2">Select Customer <span class="text-red-500">*</span></label>
-                <select id="customer-select" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Choose a customer...</option>
-                </select>
-                <p id="customer-error" class="text-red-500 text-sm mt-1 hidden">Please select a customer</p>
+    <!-- Professional Create Invoice Modal -->
+    <div id="create-modal" class="professional-modal-backdrop">
+        <div class="professional-modal" style="max-width: 800px;">
+            <div class="professional-modal-header">
+                <h2 class="professional-modal-title">Create New Invoice</h2>
+                <button class="professional-modal-close" onclick="hideCreateModal()" aria-label="Close modal">&times;</button>
             </div>
-            
-            <div id="invoice-items" class="space-y-4 mb-4">
+            <div class="professional-modal-body">
+                <div class="professional-form-group">
+                    <label class="professional-label professional-label-required">👤 Select Customer</label>
+                    <select id="customer-select" class="professional-select">
+                        <option value="">Choose a customer...</option>
+                    </select>
+                    <div id="customer-error" class="professional-error-message" style="display: none;">Please select a customer</div>
+                </div>
+                
+                <div style="margin: 1.5rem 0;">
+                    <label class="professional-label">📦 Invoice Items</label>
+                    <div id="invoice-items" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+                    <button onclick="addInvoiceItem()" class="professional-btn professional-btn-secondary" style="margin-top: 1rem;">
+                        <span>➕</span> Add Item
+                    </button>
+                </div>
+                
+                <div style="background: var(--gray-50); padding: 1.5rem; border-radius: var(--radius-lg); margin: 1.5rem 0;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--gray-900);">
+                        💰 Total: $<span id="invoice-total">0.00</span>
+                    </div>
+                </div>
             </div>
-            <button onclick="addInvoiceItem()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-4">
-                Add Item
-            </button>
-            <div class="text-lg font-semibold mb-4">
-                Total: $<span id="invoice-total">0.00</span>
-            </div>
-            <div class="flex gap-4">
-                <button onclick="saveInvoice()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                    Save Invoice
+            <div class="professional-modal-footer">
+                <button onclick="saveInvoice()" class="professional-btn professional-btn-success">
+                    <span>💾</span> Save Invoice
                 </button>
-                <button onclick="hideCreateModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-                    Cancel
+                <button onclick="hideCreateModal()" class="professional-btn professional-btn-secondary">
+                    <span>❌</span> Cancel
                 </button>
             </div>
         </div>
     </div>
     
-    <div id="view-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg w-full max-w-2xl">
-            <h2 class="text-xl font-semibold mb-4">Invoice Details</h2>
-            <div id="invoice-details"></div>
-            <div class="flex gap-4 mt-4">
-                <button id="print-btn" onclick="printInvoice()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
-                    Print Invoice
+    <!-- Professional View Invoice Modal -->
+    <div id="view-modal" class="professional-modal-backdrop">
+        <div class="professional-modal" style="max-width: 900px;">
+            <div class="professional-modal-header">
+                <h2 class="professional-modal-title">Invoice Details</h2>
+                <button class="professional-modal-close" onclick="hideViewModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="professional-modal-body">
+                <div id="invoice-details"></div>
+            </div>
+            <div class="professional-modal-footer">
+                <button id="print-btn" onclick="printInvoice()" class="professional-btn professional-btn-primary">
+                    <span>🖨️</span> Generate PDF
                 </button>
-                <button id="process-btn" onclick="updateInvoiceStatus('processed')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                    Mark as Processed
+                <button id="process-btn" onclick="updateInvoiceStatus('processed')" class="professional-btn professional-btn-success">
+                    <span>✅</span> Mark as Processed
                 </button>
-                <button onclick="updateInvoiceStatus('deleted')" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                    Delete Invoice
+                <button onclick="updateInvoiceStatus('deleted')" class="professional-btn professional-btn-danger">
+                    <span>🗑️</span> Delete Invoice
                 </button>
-                <button onclick="hideViewModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-                    Close
+                <button onclick="hideViewModal()" class="professional-btn professional-btn-secondary">
+                    <span>❌</span> Close
                 </button>
             </div>
         </div>

@@ -63,31 +63,77 @@ async function loadInvoices() {
 
 function displayInvoices(invoices) {
     const tbody = document.getElementById('invoice-list');
+    
+    if (invoices.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                    <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">No invoices found</div>
+                    <div>Create your first invoice to get started</div>
+                    <button onclick="showCreateModal()" class="professional-btn professional-btn-primary" style="margin-top: 1rem;">
+                        <span>➕</span> Create Invoice
+                    </button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
     tbody.innerHTML = '';
     
-    invoices.forEach(invoice => {
+    invoices.forEach((invoice, index) => {
         const customerInfo = invoice.customer ? invoice.customer.name : 'No Customer';
         const row = document.createElement('tr');
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        row.style.transition = 'all 0.3s ease-in-out';
+        
+        const statusBadgeClass = {
+            'created': 'professional-badge-info',
+            'processed': 'professional-badge-success',
+            'deleted': 'professional-badge-error'
+        }[invoice.status] || 'professional-badge-neutral';
+        
         row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap">${invoice.id}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${customerInfo}</td>
-            <td class="px-6 py-4 whitespace-nowrap">$${invoice.total_price.toFixed(2)}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                    ${invoice.status === 'created' ? 'bg-blue-100 text-blue-800' : ''}
-                    ${invoice.status === 'processed' ? 'bg-green-100 text-green-800' : ''}
-                    ${invoice.status === 'deleted' ? 'bg-red-100 text-red-800' : ''}">
-                    ${invoice.status}
+            <td style="font-weight: 600; color: var(--primary-600);">#${String(invoice.id).padStart(6, '0')}</td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 2rem; height: 2rem; background: var(--primary-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">👤</div>
+                    <div>
+                        <div style="font-weight: 500;">${customerInfo}</div>
+                        ${invoice.customer ? `<div style="font-size: 0.75rem; color: var(--gray-500);">${invoice.customer.phone || ''}</div>` : ''}
+                    </div>
+                </div>
+            </td>
+            <td style="font-weight: 600; font-size: 1.125rem;">$${invoice.total_price.toFixed(2)}</td>
+            <td>
+                <span class="professional-badge ${statusBadgeClass}">
+                    ${invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                 </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">${new Date(invoice.created_at).toLocaleString()}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${invoice.processed_at ? new Date(invoice.processed_at).toLocaleString() : '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <button onclick="viewInvoice(${invoice.id})" class="text-blue-600 hover:text-blue-900">View</button>
+            <td>${window.professionalInteractions ? window.professionalInteractions.formatDate(invoice.created_at) : new Date(invoice.created_at).toLocaleDateString()}</td>
+            <td>${invoice.processed_at ? (window.professionalInteractions ? window.professionalInteractions.formatDate(invoice.processed_at) : new Date(invoice.processed_at).toLocaleDateString()) : '-'}</td>
+            <td>
+                <button onclick="viewInvoice(${invoice.id})" class="professional-btn professional-btn-secondary professional-btn-sm" style="padding: 0.25rem 0.75rem;">
+                    <span>👁️</span> View
+                </button>
             </td>
         `;
+        
         tbody.appendChild(row);
+        
+        // Animate in with staggered delay
+        setTimeout(() => {
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 50 + 100);
     });
+    
+    // Announce to screen readers
+    if (window.announceToScreenReader) {
+        window.announceToScreenReader(`${invoices.length} invoices loaded`);
+    }
 }
 
 function updateStats(invoices) {
@@ -101,9 +147,30 @@ function updateStats(invoices) {
         stats[invoice.status]++;
     });
     
-    document.getElementById('created-count').textContent = stats.created;
-    document.getElementById('processed-count').textContent = stats.processed;
-    document.getElementById('deleted-count').textContent = stats.deleted;
+    // Animate the count updates
+    animateCounterUpdate('created-count', stats.created);
+    animateCounterUpdate('processed-count', stats.processed);
+    animateCounterUpdate('deleted-count', stats.deleted);
+}
+
+function animateCounterUpdate(elementId, newValue) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const currentValue = parseInt(element.textContent) || 0;
+    const increment = (newValue - currentValue) / 20;
+    let current = currentValue;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= newValue) || (increment < 0 && current <= newValue)) {
+            element.textContent = newValue;
+            element.dataset.count = newValue;
+            clearInterval(timer);
+        } else {
+            element.textContent = Math.floor(current);
+        }
+    }, 50);
 }
 
 function showCreateModal() {
@@ -111,33 +178,89 @@ function showCreateModal() {
     document.getElementById('invoice-items').innerHTML = '';
     document.getElementById('invoice-total').textContent = '0.00';
     document.getElementById('customer-select').value = '';
-    document.getElementById('customer-error').classList.add('hidden');
-    document.getElementById('customer-select').classList.remove('border-red-500');
+    
+    // Clear error states
+    const errorElement = document.getElementById('customer-error');
+    if (errorElement) {
+        errorElement.style.display = 'none';
+    }
+    
+    const customerSelect = document.getElementById('customer-select');
+    if (customerSelect) {
+        customerSelect.classList.remove('error');
+    }
+    
     addInvoiceItem();
-    document.getElementById('create-modal').classList.remove('hidden');
+    
+    // Use professional modal system
+    if (window.openModal) {
+        window.openModal('create-modal');
+    } else {
+        document.getElementById('create-modal').classList.add('active');
+    }
 }
 
 function hideCreateModal() {
-    document.getElementById('create-modal').classList.add('hidden');
+    if (window.closeModal) {
+        window.closeModal();
+    } else {
+        document.getElementById('create-modal').classList.remove('active');
+    }
 }
 
 function addInvoiceItem() {
     const itemDiv = document.createElement('div');
-    itemDiv.className = 'flex gap-4 items-center';
+    itemDiv.style.opacity = '0';
+    itemDiv.style.transform = 'translateY(-10px)';
+    itemDiv.style.transition = 'all 0.3s ease-in-out';
+    itemDiv.style.display = 'flex';
+    itemDiv.style.gap = '1rem';
+    itemDiv.style.alignItems = 'center';
+    itemDiv.style.padding = '1rem';
+    itemDiv.style.background = 'var(--gray-50)';
+    itemDiv.style.borderRadius = 'var(--radius-lg)';
+    itemDiv.style.border = '1px solid var(--gray-200)';
+    
     itemDiv.innerHTML = `
-        <select class="flex-1 px-3 py-2 border rounded product-select" onchange="updateTotal()">
-            <option value="">Select Product</option>
-            ${products.map(p => `<option value="${p.id}" data-price="${p.price}">${p.name} - $${p.price.toFixed(2)}</option>`).join('')}
-        </select>
-        <input type="number" min="1" value="1" class="w-20 px-3 py-2 border rounded quantity-input" onchange="updateTotal()">
-        <button onclick="removeItem(this)" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">Remove</button>
+        <div style="flex: 1;">
+            <label class="professional-label">📦 Product</label>
+            <select class="professional-select product-select" onchange="updateTotal()">
+                <option value="">Select Product</option>
+                ${products.map(p => `<option value="${p.id}" data-price="${p.price}">${p.name} - $${p.price.toFixed(2)}</option>`).join('')}
+            </select>
+        </div>
+        <div style="width: 120px;">
+            <label class="professional-label">📊 Quantity</label>
+            <input type="number" min="1" value="1" class="professional-input quantity-input" onchange="updateTotal()">
+        </div>
+        <div style="align-self: flex-end;">
+            <button onclick="removeItem(this)" class="professional-btn professional-btn-danger professional-btn-sm">
+                <span>🗑️</span> Remove
+            </button>
+        </div>
     `;
-    document.getElementById('invoice-items').appendChild(itemDiv);
+    
+    const container = document.getElementById('invoice-items');
+    container.appendChild(itemDiv);
+    
+    // Animate in
+    setTimeout(() => {
+        itemDiv.style.opacity = '1';
+        itemDiv.style.transform = 'translateY(0)';
+    }, 50);
 }
 
 function removeItem(button) {
-    button.parentElement.remove();
-    updateTotal();
+    const itemDiv = button.closest('div[style*="display: flex"]');
+    if (itemDiv) {
+        itemDiv.style.opacity = '0';
+        itemDiv.style.transform = 'translateX(-20px)';
+        
+        setTimeout(() => {
+            itemDiv.remove();
+            updateTotal();
+        }, 200);
+    }
 }
 
 function updateTotal() {
@@ -155,11 +278,23 @@ function updateTotal() {
 }
 
 async function saveInvoice() {
+    const saveButton = document.querySelector('[onclick="saveInvoice()"]');
+    
     // Validate customer selection
     const customerId = document.getElementById('customer-select').value;
     if (!customerId) {
-        document.getElementById('customer-select').classList.add('border-red-500');
-        document.getElementById('customer-error').classList.remove('hidden');
+        const customerSelect = document.getElementById('customer-select');
+        const errorElement = document.getElementById('customer-error');
+        
+        customerSelect.classList.add('error');
+        if (errorElement) {
+            errorElement.style.display = 'flex';
+        }
+        
+        // Show toast notification
+        if (window.showToast) {
+            window.showToast('Please select a customer', 'error');
+        }
         return;
     }
     
@@ -194,64 +329,157 @@ async function saveInvoice() {
         });
         
         if (response.ok) {
+            const result = await response.json();
             hideCreateModal();
-            loadInvoices();
-            showSuccessToast('Invoice created successfully');
+            await loadInvoices();
+            
+            // Show success toast
+            if (window.showToast) {
+                window.showToast(`Invoice #${String(result.id).padStart(6, '0')} created successfully`, 'success');
+            }
+            
+            // Reset button state
+            if (window.setButtonLoading && saveButton) {
+                window.setButtonLoading(saveButton, false);
+            }
         } else {
             const error = await response.text();
-            alert(error || 'Error creating invoice');
+            if (window.showToast) {
+                window.showToast(error || 'Error creating invoice', 'error');
+            } else {
+                alert(error || 'Error creating invoice');
+            }
         }
     } catch (error) {
         console.error('Error saving invoice:', error);
-        alert('Error creating invoice');
+        if (window.showToast) {
+            window.showToast('Failed to create invoice. Please try again.', 'error');
+        } else {
+            alert('Error creating invoice');
+        }
+    } finally {
+        // Always reset button state
+        if (window.setButtonLoading && saveButton) {
+            window.setButtonLoading(saveButton, false);
+        }
     }
 }
 
 async function viewInvoice(id) {
+    // Show loading state
+    if (window.showToast) {
+        window.showToast('Loading invoice details...', 'info', 2000);
+    }
+    
     try {
         const response = await fetch(`/api/invoices/${id}`);
+        if (!response.ok) {
+            throw new Error('Failed to load invoice');
+        }
+        
         const invoice = await response.json();
         currentInvoice = invoice;
         
         const detailsDiv = document.getElementById('invoice-details');
+        
+        const statusBadgeClass = {
+            'created': 'professional-badge-info',
+            'processed': 'professional-badge-success',
+            'deleted': 'professional-badge-error'
+        }[invoice.status] || 'professional-badge-neutral';
+        
         const customerSection = invoice.customer ? `
-            <div class="mb-4 p-4 bg-gray-50 rounded">
-                <h3 class="font-semibold text-lg mb-2">Customer Information</h3>
-                <p><strong>Name:</strong> ${invoice.customer.name}</p>
-                <p><strong>Phone:</strong> ${invoice.customer.phone}</p>
-                <p><strong>Address:</strong> ${invoice.customer.address}</p>
-                <p><strong>Country:</strong> ${invoice.customer.country}</p>
+            <div class="professional-card" style="margin-bottom: 1.5rem;">
+                <div class="professional-card-header">
+                    <h3 class="professional-card-title">👤 Customer Information</h3>
+                </div>
+                <div class="professional-card-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div>
+                            <div style="font-size: 0.875rem; font-weight: 500; color: var(--gray-600); margin-bottom: 0.25rem;">Name</div>
+                            <div style="font-weight: 600;">${invoice.customer.name}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.875rem; font-weight: 500; color: var(--gray-600); margin-bottom: 0.25rem;">Phone</div>
+                            <div>${invoice.customer.phone}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.875rem; font-weight: 500; color: var(--gray-600); margin-bottom: 0.25rem;">Address</div>
+                            <div>${invoice.customer.address}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.875rem; font-weight: 500; color: var(--gray-600); margin-bottom: 0.25rem;">Country</div>
+                            <div>${invoice.customer.country}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        ` : '<div class="mb-4 p-4 bg-red-50 rounded text-red-700">No customer information available</div>';
+        ` : `<div class="professional-card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--error-500);">
+                <div class="professional-card-content">
+                    <div style="color: var(--error-600); font-weight: 500;">⚠️ No customer information available</div>
+                </div>
+            </div>`;
         
         detailsDiv.innerHTML = customerSection + `
-            <div class="mb-4">
-                <p><strong>Invoice ID:</strong> ${invoice.id}</p>
-                <p><strong>Status:</strong> ${invoice.status}</p>
-                <p><strong>Created:</strong> ${new Date(invoice.created_at).toLocaleString()}</p>
-                ${invoice.processed_at ? `<p><strong>Processed:</strong> ${new Date(invoice.processed_at).toLocaleString()}</p>` : ''}
+            <div class="professional-card" style="margin-bottom: 1.5rem;">
+                <div class="professional-card-header">
+                    <h3 class="professional-card-title">📄 Invoice Information</h3>
+                </div>
+                <div class="professional-card-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div>
+                            <div style="font-size: 0.875rem; font-weight: 500; color: var(--gray-600); margin-bottom: 0.25rem;">Invoice ID</div>
+                            <div style="font-weight: 600; color: var(--primary-600);">#${String(invoice.id).padStart(6, '0')}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.875rem; font-weight: 500; color: var(--gray-600); margin-bottom: 0.25rem;">Status</div>
+                            <span class="professional-badge ${statusBadgeClass}">${invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}</span>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.875rem; font-weight: 500; color: var(--gray-600); margin-bottom: 0.25rem;">Created Date</div>
+                            <div>${window.professionalInteractions ? window.professionalInteractions.formatDate(invoice.created_at) : new Date(invoice.created_at).toLocaleDateString()}</div>
+                        </div>
+                        ${invoice.processed_at ? `<div>
+                            <div style="font-size: 0.875rem; font-weight: 500; color: var(--gray-600); margin-bottom: 0.25rem;">Processed Date</div>
+                            <div>${window.professionalInteractions ? window.professionalInteractions.formatDate(invoice.processed_at) : new Date(invoice.processed_at).toLocaleDateString()}</div>
+                        </div>` : ''}
+                    </div>
+                </div>
             </div>
-            <table class="w-full mb-4">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit Price</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    ${invoice.items.map(item => `
+            
+            <div class="professional-table-container" style="margin-bottom: 1.5rem;">
+                <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--gray-900); margin: 0;">📦 Invoice Items</h3>
+                </div>
+                <table class="professional-table">
+                    <thead class="professional-table-header">
                         <tr>
-                            <td class="px-6 py-4">${item.product.name}</td>
-                            <td class="px-6 py-4">${item.quantity}</td>
-                            <td class="px-6 py-4">$${item.unit_price.toFixed(2)}</td>
-                            <td class="px-6 py-4">$${item.total_price.toFixed(2)}</td>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
                         </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-            <div class="text-lg font-semibold">Total: $${invoice.total_price.toFixed(2)}</div>
+                    </thead>
+                    <tbody>
+                        ${invoice.items.map(item => `
+                            <tr>
+                                <td style="font-weight: 500;">${item.product.name}</td>
+                                <td style="text-align: center;">${item.quantity}</td>
+                                <td>${window.professionalInteractions ? window.professionalInteractions.formatCurrency(item.unit_price) : '$' + item.unit_price.toFixed(2)}</td>
+                                <td style="font-weight: 600;">${window.professionalInteractions ? window.professionalInteractions.formatCurrency(item.total_price) : '$' + item.total_price.toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="professional-card">
+                <div class="professional-card-content" style="background: var(--primary-50); text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-700);">
+                        💰 Total Amount: ${window.professionalInteractions ? window.professionalInteractions.formatCurrency(invoice.total_price) : '$' + invoice.total_price.toFixed(2)}
+                    </div>
+                </div>
+            </div>
         `;
         
         const processBtn = document.getElementById('process-btn');
@@ -261,15 +489,28 @@ async function viewInvoice(id) {
             processBtn.style.display = 'none';
         }
         
-        document.getElementById('view-modal').classList.remove('hidden');
+        // Use professional modal system
+        if (window.openModal) {
+            window.openModal('view-modal');
+        } else {
+            document.getElementById('view-modal').classList.add('active');
+        }
     } catch (error) {
         console.error('Error viewing invoice:', error);
-        alert('Error loading invoice details');
+        if (window.showToast) {
+            window.showToast('Failed to load invoice details', 'error');
+        } else {
+            alert('Error loading invoice details');
+        }
     }
 }
 
 function hideViewModal() {
-    document.getElementById('view-modal').classList.add('hidden');
+    if (window.closeModal) {
+        window.closeModal();
+    } else {
+        document.getElementById('view-modal').classList.remove('active');
+    }
 }
 
 async function updateInvoiceStatus(status) {
@@ -284,13 +525,32 @@ async function updateInvoiceStatus(status) {
         
         if (response.ok) {
             hideViewModal();
-            loadInvoices();
+            await loadInvoices();
+            
+            // Show success message
+            const statusMessages = {
+                'processed': 'Invoice marked as processed',
+                'deleted': 'Invoice deleted successfully'
+            };
+            
+            if (window.showToast) {
+                window.showToast(statusMessages[status] || 'Status updated', 'success');
+            }
         } else {
-            alert('Error updating invoice status');
+            const errorText = await response.text();
+            if (window.showToast) {
+                window.showToast(errorText || 'Error updating invoice status', 'error');
+            } else {
+                alert('Error updating invoice status');
+            }
         }
     } catch (error) {
         console.error('Error updating invoice:', error);
-        alert('Error updating invoice status');
+        if (window.showToast) {
+            window.showToast('Failed to update invoice status', 'error');
+        } else {
+            alert('Error updating invoice status');
+        }
     }
 }
 
@@ -353,7 +613,19 @@ function showSuccessToast(message) {
 
 function clearFilters() {
     document.getElementById('filter-form').reset();
-    loadInvoices();
+    
+    // Animate the clear action
+    const form = document.getElementById('filter-form');
+    form.style.opacity = '0.5';
+    
+    setTimeout(() => {
+        form.style.opacity = '1';
+        loadInvoices();
+    }, 200);
+    
+    if (window.showToast) {
+        window.showToast('Filters cleared', 'info', 2000);
+    }
 }
 
 document.getElementById('filter-form').addEventListener('submit', (e) => {

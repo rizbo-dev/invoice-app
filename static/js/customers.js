@@ -1,11 +1,12 @@
 let currentCustomer = null;
 let currentMode = 'create';
+let customers = []; // Global customers array for easy access
 
 async function loadCustomers(searchQuery = '') {
     try {
         const params = searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : '';
         const response = await fetch(`/api/customers${params}`);
-        const customers = await response.json();
+        customers = await response.json(); // Update global array
         displayCustomers(customers);
     } catch (error) {
         console.error('Error loading customers:', error);
@@ -16,36 +17,114 @@ async function loadCustomers(searchQuery = '') {
 function displayCustomers(customers) {
     const tbody = document.getElementById('customer-list');
     
+    // Update total count with animation
+    const totalElement = document.getElementById('total-customers');
+    if (totalElement) {
+        animateCounterUpdate('total-customers', customers.length);
+    }
+    
     if (customers.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="px-6 py-4 text-center text-gray-500">No customers found</td>
+                <td colspan="7" style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+                    <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">No customers found</div>
+                    <div>Add your first customer to get started</div>
+                    <button onclick="openCustomerModal('create')" class="professional-btn professional-btn-primary" style="margin-top: 1rem;">
+                        <span>➕</span> Add Customer
+                    </button>
+                </td>
             </tr>
         `;
         return;
     }
     
-    tbody.innerHTML = customers.map(customer => `
-        <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap">${customer.id}</td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium">${customer.name}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${customer.phone}</td>
-            <td class="px-6 py-4">${customer.address}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${customer.country}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${new Date(customer.created_at).toLocaleDateString()}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <button onclick="openCustomerModal('edit', ${JSON.stringify(customer).replace(/"/g, '&quot;')})" 
-                        class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                <button onclick="deleteCustomer(${customer.id})" 
-                        class="text-red-600 hover:text-red-900">Delete</button>
+    tbody.innerHTML = '';
+    
+    customers.forEach((customer, index) => {
+        const row = document.createElement('tr');
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        row.style.transition = 'all 0.3s ease-in-out';
+        
+        row.innerHTML = `
+            <td style="font-weight: 600; color: var(--primary-600);">#${String(customer.id).padStart(4, '0')}</td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 2rem; height: 2rem; background: var(--success-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; color: var(--success-700);">👤</div>
+                    <div>
+                        <div style="font-weight: 600;">${customer.name}</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500);">Customer ID: ${customer.id}</div>
+                    </div>
+                </div>
             </td>
-        </tr>
-    `).join('');
+            <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="color: var(--gray-400);">📞</span>
+                    <span>${customer.phone}</span>
+                </div>
+            </td>
+            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;" title="${customer.address}">
+                    <span style="color: var(--gray-400);">📍</span>
+                    <span>${customer.address}</span>
+                </div>
+            </td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="color: var(--gray-400);">🌍</span>
+                    <span>${customer.country}</span>
+                </div>
+            </td>
+            <td>${window.professionalInteractions ? window.professionalInteractions.formatDate(customer.created_at) : new Date(customer.created_at).toLocaleDateString()}</td>
+            <td>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="openCustomerModal('edit', ${customer.id})" class="professional-btn professional-btn-secondary professional-btn-sm" title="Edit customer">
+                        <span>✏️</span> Edit
+                    </button>
+                    <button onclick="deleteCustomer(${customer.id})" class="professional-btn professional-btn-danger professional-btn-sm" title="Delete customer">
+                        <span>🗑️</span> Delete
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+        
+        // Animate in with staggered delay
+        setTimeout(() => {
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 50 + 100);
+    });
+    
+    // Announce to screen readers
+    if (window.announceToScreenReader) {
+        window.announceToScreenReader(`${customers.length} customers loaded`);
+    }
 }
 
-function openCustomerModal(mode, customerData = null) {
+function animateCounterUpdate(elementId, newValue) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const currentValue = parseInt(element.textContent) || 0;
+    const increment = (newValue - currentValue) / 20;
+    let current = currentValue;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= newValue) || (increment < 0 && current <= newValue)) {
+            element.textContent = newValue;
+            clearInterval(timer);
+        } else {
+            element.textContent = Math.floor(current);
+        }
+    }, 50);
+}
+
+function openCustomerModal(mode, customerIdOrData = null) {
     currentMode = mode;
-    currentCustomer = customerData;
     
     const modal = document.getElementById('customer-modal');
     const title = document.getElementById('modal-title');
@@ -57,33 +136,69 @@ function openCustomerModal(mode, customerData = null) {
     clearErrors();
     
     if (mode === 'create') {
-        title.textContent = 'Add New Customer';
+        title.textContent = '👤 Add New Customer';
+        currentCustomer = null;
         nameInput.value = '';
         phoneInput.value = '';
         addressInput.value = '';
         countryInput.value = '';
     } else {
-        title.textContent = 'Edit Customer';
-        nameInput.value = customerData.name;
-        phoneInput.value = customerData.phone;
-        addressInput.value = customerData.address;
-        countryInput.value = customerData.country;
+        title.textContent = '✏️ Edit Customer';
+        // If customerIdOrData is a number, find the customer by ID
+        if (typeof customerIdOrData === 'number') {
+            // Find customer in the current customers array (assuming it's available globally)
+            const customer = customers.find(c => c.id === customerIdOrData);
+            if (customer) {
+                currentCustomer = customer;
+                nameInput.value = customer.name;
+                phoneInput.value = customer.phone;
+                addressInput.value = customer.address;
+                countryInput.value = customer.country;
+            }
+        } else {
+            // Legacy support for direct customer object
+            currentCustomer = customerIdOrData;
+            if (customerIdOrData) {
+                nameInput.value = customerIdOrData.name;
+                phoneInput.value = customerIdOrData.phone;
+                addressInput.value = customerIdOrData.address;
+                countryInput.value = customerIdOrData.country;
+            }
+        }
     }
     
-    modal.classList.remove('hidden');
-    nameInput.focus();
+    // Use professional modal system
+    if (window.openModal) {
+        window.openModal('customer-modal');
+    } else {
+        modal.classList.add('active');
+    }
+    
+    // Focus management
+    setTimeout(() => nameInput.focus(), 100);
 }
 
 function closeCustomerModal() {
-    document.getElementById('customer-modal').classList.add('hidden');
+    if (window.closeModal) {
+        window.closeModal();
+    } else {
+        document.getElementById('customer-modal').classList.remove('active');
+    }
     clearErrors();
 }
 
 function clearErrors() {
     const errorFields = ['name', 'phone', 'address', 'country'];
     errorFields.forEach(field => {
-        document.getElementById(`${field}-error`).classList.add('hidden');
-        document.getElementById(`customer-${field}`).classList.remove('border-red-500');
+        const errorElement = document.getElementById(`${field}-error`);
+        const inputElement = document.getElementById(`customer-${field}`);
+        
+        if (errorElement) {
+            errorElement.style.display = 'none';
+        }
+        if (inputElement) {
+            inputElement.classList.remove('error');
+        }
     });
 }
 
@@ -135,8 +250,14 @@ async function handleFormSubmit(event) {
 
 async function saveCustomer(formData) {
     const saveBtn = document.getElementById('save-btn');
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
+    
+    // Use professional loading state
+    if (window.setButtonLoading) {
+        window.setButtonLoading(saveBtn, true);
+    } else {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+    }
     
     try {
         const url = currentMode === 'create' 
@@ -151,25 +272,58 @@ async function saveCustomer(formData) {
         
         if (!response.ok) {
             const error = await response.text();
-            showError(error || 'Failed to save customer');
+            if (window.showToast) {
+                window.showToast(error || 'Failed to save customer', 'error');
+            } else {
+                showError(error || 'Failed to save customer');
+            }
             return;
         }
         
+        const result = await response.json();
         closeCustomerModal();
         await loadCustomers();
-        showSuccess(currentMode === 'create' ? 'Customer created successfully' : 'Customer updated successfully');
+        
+        // Show success toast
+        const message = currentMode === 'create' 
+            ? `Customer "${formData.name}" created successfully` 
+            : `Customer "${formData.name}" updated successfully`;
+            
+        if (window.showToast) {
+            window.showToast(message, 'success');
+        } else {
+            showSuccess(message);
+        }
+        
     } catch (error) {
         console.error('Error saving customer:', error);
-        showError('Failed to save customer');
+        if (window.showToast) {
+            window.showToast('Failed to save customer. Please try again.', 'error');
+        } else {
+            showError('Failed to save customer');
+        }
     } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Save';
+        // Reset button state
+        if (window.setButtonLoading) {
+            window.setButtonLoading(saveBtn, false);
+        } else {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+        }
     }
 }
 
 async function deleteCustomer(customerId) {
-    if (!confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+    // Show professional confirmation dialog
+    const confirmed = confirm('⚠️ Delete Customer\n\nAre you sure you want to delete this customer? This action cannot be undone.\n\nNote: Customers with existing invoices cannot be deleted.');
+    
+    if (!confirmed) {
         return;
+    }
+    
+    // Show loading toast
+    if (window.showToast) {
+        window.showToast('Deleting customer...', 'info', 2000);
     }
     
     try {
@@ -179,24 +333,51 @@ async function deleteCustomer(customerId) {
         
         if (!response.ok) {
             const error = await response.text();
+            let errorMessage = error || 'Failed to delete customer';
+            
             if (error.includes('has invoices')) {
-                showError('Cannot delete customer that has invoices. Please delete or reassign invoices first.');
+                errorMessage = 'Cannot delete customer with existing invoices. Please delete or reassign invoices first.';
+            }
+            
+            if (window.showToast) {
+                window.showToast(errorMessage, 'error');
             } else {
-                showError(error || 'Failed to delete customer');
+                showError(errorMessage);
             }
             return;
         }
         
         await loadCustomers();
-        showSuccess('Customer deleted successfully');
+        
+        if (window.showToast) {
+            window.showToast('Customer deleted successfully', 'success');
+        } else {
+            showSuccess('Customer deleted successfully');
+        }
+        
     } catch (error) {
         console.error('Error deleting customer:', error);
-        showError('Failed to delete customer');
+        if (window.showToast) {
+            window.showToast('Failed to delete customer. Please try again.', 'error');
+        } else {
+            showError('Failed to delete customer');
+        }
     }
 }
 
 function handleSearch() {
     const searchQuery = document.getElementById('search-input').value;
+    
+    // Add visual feedback for search
+    const searchInput = document.getElementById('search-input');
+    if (searchQuery.trim()) {
+        searchInput.style.borderColor = 'var(--primary-500)';
+        searchInput.style.background = 'var(--primary-50)';
+    } else {
+        searchInput.style.borderColor = '';
+        searchInput.style.background = '';
+    }
+    
     loadCustomers(searchQuery);
 }
 
@@ -204,24 +385,45 @@ function showFieldError(field, message) {
     const input = document.getElementById(`customer-${field}`);
     const error = document.getElementById(`${field}-error`);
     
-    input.classList.add('border-red-500');
-    error.textContent = message;
-    error.classList.remove('hidden');
+    if (input) {
+        input.classList.add('error');
+    }
+    if (error) {
+        error.textContent = message;
+        error.style.display = 'flex';
+    }
 }
 
 function showError(message) {
-    alert(message);
+    if (window.showToast) {
+        window.showToast(message, 'error');
+    } else {
+        alert(message);
+    }
 }
 
 function showSuccess(message) {
-    const toast = document.createElement('div');
-    toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
+    if (window.showToast) {
+        window.showToast(message, 'success');
+    } else {
+        const toast = document.createElement('div');
+        toast.className = 'professional-toast professional-toast-success active';
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div>✅</div>
+                <div>
+                    <div style="font-weight: 500;">Success</div>
+                    <div style="font-size: 0.875rem; color: var(--gray-600);">${message}</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.remove('active');
+            setTimeout(() => toast.remove(), 200);
+        }, 3000);
+    }
 }
 
 // Initialize page

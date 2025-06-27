@@ -3,90 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Management - Invoice System</title>
+    <title>Customer Management - InvoicePro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/modern-professional.css">
+    <script src="js/modern-interactions.js"></script>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold">Customer Management</h1>
-            <button onclick="window.location.href='/'" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
-                Back to Dashboard
-            </button>
+<body>
+    <!-- Professional Header -->
+    <header class="professional-header">
+        <div class="professional-container">
+            <div class="professional-header-content">
+                <a href="/" class="professional-logo">
+                    <span style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.5rem;">📊</span>
+                        InvoicePro
+                    </span>
+                </a>
+                <nav class="professional-nav">
+                    <a href="/" class="professional-nav-link">Dashboard</a>
+                    <a href="/customers.html" class="professional-nav-link" style="background-color: rgba(255, 255, 255, 0.1);">Customers</a>
+                    <a href="/products.html" class="professional-nav-link">Products</a>
+                    <button onclick="window.location.href='/'" class="professional-btn professional-btn-secondary professional-btn-sm">
+                        <span>🏠</span> Dashboard
+                    </button>
+                </nav>
+            </div>
         </div>
-        
-        <div class="bg-white p-6 rounded shadow mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex-1 mr-4">
-                    <input type="text" id="search-input" placeholder="Search customers by name or phone..." 
-                           class="w-full px-4 py-2 border rounded"
-                           onkeyup="handleSearch()">
+    </header>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="professional-container">
+        <div class="professional-breadcrumb">
+            <a href="/">🏠 Dashboard</a> / <span>👥 Customer Management</span>
+        </div>
+    </div>
+
+    <main id="main-content" class="professional-container" style="padding-bottom: 2rem;">
+        <!-- Welcome Section -->
+        <div style="margin-bottom: 2rem;">
+            <h1 style="font-size: 2.25rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.5rem;">
+                Customer Management
+            </h1>
+            <p style="color: var(--gray-600); font-size: 1.125rem;">
+                Manage your customer database with professional efficiency
+            </p>
+        </div>
+
+        <!-- Search and Actions Section -->
+        <div class="professional-card" style="margin-bottom: 2rem;">
+            <div class="professional-card-header">
+                <h2 class="professional-card-title">Search & Actions</h2>
+                <p class="professional-card-description">Find customers quickly and manage your client database</p>
+            </div>
+            <div class="professional-card-content">
+                <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <label class="professional-label">🔍 Search Customers</label>
+                        <input type="text" id="search-input" placeholder="Search by name, phone, or address..." 
+                               class="professional-input"
+                               onkeyup="handleSearch()">
+                    </div>
+                    <div>
+                        <button onclick="openCustomerModal('create')" class="professional-btn professional-btn-success professional-btn-lg">
+                            <span>➕</span> Add New Customer
+                        </button>
+                    </div>
                 </div>
-                <button onclick="openCustomerModal('create')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                    Add New Customer
-                </button>
             </div>
         </div>
         
-        <div class="bg-white rounded shadow">
-            <table class="w-full">
-                <thead class="bg-gray-50">
+        <!-- Professional Customer Table -->
+        <div class="professional-table-container">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--gray-900); margin: 0;">Customer Directory</h2>
+                    <p style="color: var(--gray-600); margin: 0.5rem 0 0 0;">Comprehensive list of all your business customers</p>
+                </div>
+                <div id="customer-stats" style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-600);" id="total-customers">0</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase;">Total Customers</div>
+                    </div>
+                </div>
+            </div>
+            <table class="professional-table">
+                <thead class="professional-table-header">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Country</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th data-sortable style="cursor: pointer;">👤 Customer ID</th>
+                        <th data-sortable style="cursor: pointer;">📝 Name</th>
+                        <th data-sortable style="cursor: pointer;">📞 Phone</th>
+                        <th data-sortable style="cursor: pointer;">📍 Address</th>
+                        <th data-sortable style="cursor: pointer;">🌍 Country</th>
+                        <th data-sortable style="cursor: pointer;">📅 Joined Date</th>
+                        <th>⚡ Actions</th>
                     </tr>
                 </thead>
-                <tbody id="customer-list" class="bg-white divide-y divide-gray-200">
+                <tbody id="customer-list">
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading customers...</td>
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                            <div class="professional-loading" style="margin: 0 auto 1rem;"></div>
+                            <div>Loading customers...</div>
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    </div>
+    </main>
     
-    <div id="customer-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 id="modal-title" class="text-xl font-semibold mb-4">Add New Customer</h2>
-            <form id="customer-form" onsubmit="handleFormSubmit(event)">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Customer Name <span class="text-red-500">*</span></label>
-                    <input type="text" id="customer-name" name="name" required
-                           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p id="name-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Phone Number <span class="text-red-500">*</span></label>
-                    <input type="tel" id="customer-phone" name="phone" required
-                           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p id="phone-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Address <span class="text-red-500">*</span></label>
-                    <textarea id="customer-address" name="address" required rows="3"
-                              class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                    <p id="address-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Country <span class="text-red-500">*</span></label>
-                    <input type="text" id="customer-country" name="country" required
-                           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p id="country-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-                <div class="flex gap-4">
-                    <button type="submit" id="save-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400">
-                        Save
-                    </button>
-                    <button type="button" onclick="closeCustomerModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-                        Cancel
-                    </button>
-                </div>
-            </form>
+    <!-- Professional Customer Modal -->
+    <div id="customer-modal" class="professional-modal-backdrop">
+        <div class="professional-modal">
+            <div class="professional-modal-header">
+                <h2 id="modal-title" class="professional-modal-title">Add New Customer</h2>
+                <button class="professional-modal-close" onclick="closeCustomerModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="professional-modal-body">
+                <form id="customer-form" class="professional-form" onsubmit="handleFormSubmit(event)">
+                    <div class="professional-form-group">
+                        <label class="professional-label professional-label-required">👤 Customer Name</label>
+                        <input type="text" id="customer-name" name="name" required
+                               class="professional-input" placeholder="Enter full name">
+                        <div id="name-error" class="professional-error-message" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="professional-form-group">
+                        <label class="professional-label professional-label-required">📞 Phone Number</label>
+                        <input type="tel" id="customer-phone" name="phone" required
+                               class="professional-input" placeholder="Enter phone number">
+                        <div id="phone-error" class="professional-error-message" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="professional-form-group">
+                        <label class="professional-label professional-label-required">📍 Address</label>
+                        <textarea id="customer-address" name="address" required rows="3"
+                                  class="professional-textarea" placeholder="Enter complete address"></textarea>
+                        <div id="address-error" class="professional-error-message" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="professional-form-group">
+                        <label class="professional-label professional-label-required">🌍 Country</label>
+                        <input type="text" id="customer-country" name="country" required
+                               class="professional-input" placeholder="Enter country">
+                        <div id="country-error" class="professional-error-message" style="display: none;"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="professional-modal-footer">
+                <button type="submit" form="customer-form" id="save-btn" class="professional-btn professional-btn-success">
+                    <span>💾</span> Save Customer
+                </button>
+                <button type="button" onclick="closeCustomerModal()" class="professional-btn professional-btn-secondary">
+                    <span>❌</span> Cancel
+                </button>
+            </div>
         </div>
     </div>
     

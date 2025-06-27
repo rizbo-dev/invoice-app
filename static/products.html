@@ -3,76 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Management - Invoice System</title>
+    <title>Product Management - InvoicePro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/modern-professional.css">
+    <script src="js/modern-interactions.js"></script>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold">Product Management</h1>
-            <button onclick="window.location.href='/'" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
-                Back to Dashboard
-            </button>
+<body>
+    <!-- Professional Header -->
+    <header class="professional-header">
+        <div class="professional-container">
+            <div class="professional-header-content">
+                <a href="/" class="professional-logo">
+                    <span style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.5rem;">📊</span>
+                        InvoicePro
+                    </span>
+                </a>
+                <nav class="professional-nav">
+                    <a href="/" class="professional-nav-link">Dashboard</a>
+                    <a href="/customers.html" class="professional-nav-link">Customers</a>
+                    <a href="/products.html" class="professional-nav-link" style="background-color: rgba(255, 255, 255, 0.1);">Products</a>
+                    <button onclick="window.location.href='/'" class="professional-btn professional-btn-secondary professional-btn-sm">
+                        <span>🏠</span> Dashboard
+                    </button>
+                </nav>
+            </div>
         </div>
-        
-        <div class="bg-white p-6 rounded shadow mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex-1 mr-4">
-                    <input type="text" id="search-input" placeholder="Search products by name..." 
-                           class="w-full px-4 py-2 border rounded"
-                           onkeyup="handleSearch()">
+    </header>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="professional-container">
+        <div class="professional-breadcrumb">
+            <a href="/">🏠 Dashboard</a> / <span>📦 Product Management</span>
+        </div>
+    </div>
+
+    <main id="main-content" class="professional-container" style="padding-bottom: 2rem;">
+        <!-- Welcome Section -->
+        <div style="margin-bottom: 2rem;">
+            <h1 style="font-size: 2.25rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.5rem;">
+                Product Management
+            </h1>
+            <p style="color: var(--gray-600); font-size: 1.125rem;">
+                Manage your product catalog with professional efficiency
+            </p>
+        </div>
+
+        <!-- Search and Actions Section -->
+        <div class="professional-card" style="margin-bottom: 2rem;">
+            <div class="professional-card-header">
+                <h2 class="professional-card-title">Search & Actions</h2>
+                <p class="professional-card-description">Find products quickly and manage your inventory catalog</p>
+            </div>
+            <div class="professional-card-content">
+                <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <label class="professional-label">🔍 Search Products</label>
+                        <input type="text" id="search-input" placeholder="Search by product name..." 
+                               class="professional-input"
+                               onkeyup="handleSearch()">
+                    </div>
+                    <div>
+                        <button onclick="openProductModal('create')" class="professional-btn professional-btn-success professional-btn-lg">
+                            <span>➕</span> Add New Product
+                        </button>
+                    </div>
                 </div>
-                <button onclick="openProductModal('create')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                    Add New Product
-                </button>
             </div>
         </div>
         
-        <div class="bg-white rounded shadow">
-            <table class="w-full">
-                <thead class="bg-gray-50">
+        <!-- Professional Product Table -->
+        <div class="professional-table-container">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--gray-900); margin: 0;">Product Catalog</h2>
+                    <p style="color: var(--gray-600); margin: 0.5rem 0 0 0;">Comprehensive list of all your business products and services</p>
+                </div>
+                <div id="product-stats" style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-600);" id="total-products">0</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase;">Total Products</div>
+                    </div>
+                </div>
+            </div>
+            <table class="professional-table">
+                <thead class="professional-table-header">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th data-sortable style="cursor: pointer;">📦 Product ID</th>
+                        <th data-sortable style="cursor: pointer;">📝 Product Name</th>
+                        <th data-sortable style="cursor: pointer;">💰 Price</th>
+                        <th data-sortable style="cursor: pointer;">📅 Created Date</th>
+                        <th>⚡ Actions</th>
                     </tr>
                 </thead>
-                <tbody id="product-list" class="bg-white divide-y divide-gray-200">
+                <tbody id="product-list">
                     <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading products...</td>
+                        <td colspan="5" style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                            <div class="professional-loading" style="margin: 0 auto 1rem;"></div>
+                            <div>Loading products...</div>
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    </div>
+    </main>
     
-    <div id="product-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 id="modal-title" class="text-xl font-semibold mb-4">Add New Product</h2>
-            <form id="product-form" onsubmit="handleFormSubmit(event)">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Product Name <span class="text-red-500">*</span></label>
-                    <input type="text" id="product-name" name="name" required
-                           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p id="name-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Product Price <span class="text-red-500">*</span></label>
-                    <input type="number" id="product-price" name="price" step="0.01" min="0.01" required
-                           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p id="price-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-                <div class="flex gap-4">
-                    <button type="submit" id="save-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400">
-                        Save
-                    </button>
-                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-                        Cancel
-                    </button>
-                </div>
-            </form>
+    <!-- Professional Product Modal -->
+    <div id="product-modal" class="professional-modal-backdrop">
+        <div class="professional-modal">
+            <div class="professional-modal-header">
+                <h2 id="modal-title" class="professional-modal-title">Add New Product</h2>
+                <button class="professional-modal-close" onclick="closeProductModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="professional-modal-body">
+                <form id="product-form" class="professional-form" onsubmit="handleFormSubmit(event)">
+                    <div class="professional-form-group">
+                        <label class="professional-label professional-label-required">📝 Product Name</label>
+                        <input type="text" id="product-name" name="name" required
+                               class="professional-input" placeholder="Enter product name">
+                        <div id="name-error" class="professional-error-message" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="professional-form-group">
+                        <label class="professional-label professional-label-required">💰 Product Price</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--gray-500); font-weight: 500;">$</span>
+                            <input type="number" id="product-price" name="price" step="0.01" min="0.01" required
+                                   class="professional-input" style="padding-left: 2rem;" placeholder="0.00">
+                        </div>
+                        <div id="price-error" class="professional-error-message" style="display: none;"></div>
+                        <div style="font-size: 0.875rem; color: var(--gray-500); margin-top: 0.25rem;">
+                            Enter the price in USD (e.g., 29.99)
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="professional-modal-footer">
+                <button type="submit" form="product-form" id="save-btn" class="professional-btn professional-btn-success">
+                    <span>💾</span> Save Product
+                </button>
+                <button type="button" onclick="closeProductModal()" class="professional-btn professional-btn-secondary">
+                    <span>❌</span> Cancel
+                </button>
+            </div>
         </div>
     </div>
     
