@@ -20,7 +20,17 @@ func New(db *sql.DB) *Handler {
 }
 
 func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.db.Query("SELECT id, name, price, created_at FROM products")
+	query := "SELECT id, name, price, created_at FROM products"
+	var args []interface{}
+	
+	if search := r.URL.Query().Get("search"); search != "" {
+		query += " WHERE name LIKE ?"
+		args = append(args, "%"+search+"%")
+	}
+	
+	query += " ORDER BY created_at DESC"
+	
+	rows, err := h.db.Query(query, args...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -41,10 +51,54 @@ func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(products)
 }
 
+func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		return
+	}
+
+	var p models.Product
+	err = h.db.QueryRow("SELECT id, name, price, created_at FROM products WHERE id = ?", id).
+		Scan(&p.ID, &p.Name, &p.Price, &p.CreatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Product not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(p)
+}
+
 func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var p models.Product
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if p.Name == "" {
+		http.Error(w, "Product name is required", http.StatusBadRequest)
+		return
+	}
+	if p.Price <= 0 {
+		http.Error(w, "Product price must be positive", http.StatusBadRequest)
+		return
+	}
+
+	var exists int
+	err := h.db.QueryRow("SELECT COUNT(*) FROM products WHERE name = ?", p.Name).Scan(&exists)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if exists > 0 {
+		http.Error(w, "Product with this name already exists", http.StatusBadRequest)
 		return
 	}
 
@@ -77,9 +131,35 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.db.Exec("UPDATE products SET name = ?, price = ? WHERE id = ?", p.Name, p.Price, id)
+	if p.Name == "" {
+		http.Error(w, "Product name is required", http.StatusBadRequest)
+		return
+	}
+	if p.Price <= 0 {
+		http.Error(w, "Product price must be positive", http.StatusBadRequest)
+		return
+	}
+
+	var exists int
+	err = h.db.QueryRow("SELECT COUNT(*) FROM products WHERE name = ? AND id != ?", p.Name, id).Scan(&exists)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if exists > 0 {
+		http.Error(w, "Product with this name already exists", http.StatusBadRequest)
+		return
+	}
+
+	result, err := h.db.Exec("UPDATE products SET name = ?, price = ? WHERE id = ?", p.Name, p.Price, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
 
@@ -94,9 +174,30 @@ func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.db.Exec("DELETE FROM products WHERE id = ?", id)
+	var count int
+	err = h.db.QueryRow(`
+		SELECT COUNT(*) FROM invoice_items ii
+		JOIN invoices i ON ii.invoice_id = i.id
+		WHERE ii.product_id = ? AND i.status != 'deleted'
+	`, id).Scan(&count)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if count > 0 {
+		http.Error(w, "Cannot delete product that is used in non-deleted invoices", http.StatusBadRequest)
+		return
+	}
+
+	result, err := h.db.Exec("DELETE FROM products WHERE id = ?", id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
 

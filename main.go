@@ -22,6 +22,7 @@ func main() {
 
 	r.HandleFunc("/api/products", h.GetProducts).Methods("GET")
 	r.HandleFunc("/api/products", h.CreateProduct).Methods("POST")
+	r.HandleFunc("/api/products/{id}", h.GetProduct).Methods("GET")
 	r.HandleFunc("/api/products/{id}", h.UpdateProduct).Methods("PUT")
 	r.HandleFunc("/api/products/{id}", h.DeleteProduct).Methods("DELETE")
 

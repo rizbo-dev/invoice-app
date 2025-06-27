@@ -253,7 +253,18 @@ document.getElementById('filter-form').addEventListener('submit', (e) => {
     loadInvoices();
 });
 
+async function loadProductCount() {
+    try {
+        const response = await fetch('/api/products');
+        const products = await response.json();
+        document.getElementById('product-count').textContent = products.length;
+    } catch (error) {
+        console.error('Error loading product count:', error);
+    }
+}
+
 window.addEventListener('load', async () => {
     await loadProducts();
     await loadInvoices();
+    await loadProductCount();
 });

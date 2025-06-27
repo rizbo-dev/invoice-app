@@ -10,7 +10,18 @@
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-8">Invoice Management System</h1>
         
-        <div class="mb-8 grid grid-cols-3 gap-4">
+        <div class="mb-4 flex justify-between items-center">
+            <div></div>
+            <button onclick="window.location.href='/products.html'" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Manage Products
+            </button>
+        </div>
+        
+        <div class="mb-8 grid grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded shadow">
+                <h3 class="font-semibold text-lg">Total Products</h3>
+                <p class="text-2xl font-bold text-purple-600" id="product-count">0</p>
+            </div>
             <div class="bg-white p-4 rounded shadow">
                 <h3 class="font-semibold text-lg">Created</h3>
                 <p class="text-2xl font-bold text-blue-600" id="created-count">0</p>
