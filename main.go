@@ -30,6 +30,7 @@ func main() {
 	r.HandleFunc("/api/invoices", h.CreateInvoice).Methods("POST")
 	r.HandleFunc("/api/invoices/{id}", h.GetInvoice).Methods("GET")
 	r.HandleFunc("/api/invoices/{id}/status", h.UpdateInvoiceStatus).Methods("PUT")
+	r.HandleFunc("/api/invoices/{id}/pdf", h.GenerateInvoicePDF).Methods("GET")
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 

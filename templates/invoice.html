@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            padding: 40px;
+        }
+        
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .invoice-header h1 {
+            font-size: 36px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .invoice-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .info-section {
+            flex: 1;
+        }
+        
+        .info-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .status-created {
+            color: #3b82f6;
+        }
+        
+        .status-processed {
+            color: #22c55e;
+        }
+        
+        .status-deleted {
+            color: #ef4444;
+        }
+        
+        .items-section {
+            margin-bottom: 30px;
+        }
+        
+        .items-section h2 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .items-table th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: normal;
+            font-size: 14px;
+        }
+        
+        .items-table th:last-child,
+        .items-table td:last-child {
+            text-align: right;
+        }
+        
+        .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .items-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .quantity {
+            text-align: center !important;
+        }
+        
+        .price {
+            text-align: right !important;
+        }
+        
+        .summary-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+        }
+        
+        .summary-info {
+            color: #666;
+        }
+        
+        .total-box {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 8px;
+        }
+        
+        .total-label {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .total-amount {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .footer p {
+            margin-bottom: 5px;
+        }
+        
+        .thank-you {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-header">
+        <h1>INVOICE</h1>
+    </div>
+    
+    <div class="invoice-info">
+        <div class="info-section">
+            <div class="info-label">Invoice Number</div>
+            <div class="info-value">#{{printf "%06d" .ID}}</div>
+        </div>
+        <div class="info-section">
+            <div class="info-label">Status</div>
+            <div class="info-value status-{{.Status}}">{{.Status | toUpper}}</div>
+        </div>
+        <div class="info-section">
+            <div class="info-label">Created Date</div>
+            <div class="info-value">{{.CreatedAt}}</div>
+        </div>
+        {{if .ProcessedAt}}
+        <div class="info-section">
+            <div class="info-label">Processed Date</div>
+            <div class="info-value">{{.ProcessedAt}}</div>
+        </div>
+        {{end}}
+    </div>
+    
+    <div class="items-section">
+        <h2>Invoice Items</h2>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Product</th>
+                    <th style="width: 15%;" class="quantity">Quantity</th>
+                    <th style="width: 17.5%;" class="price">Unit Price</th>
+                    <th style="width: 17.5%;" class="price">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Items}}
+                <tr>
+                    <td>{{.ProductName}}</td>
+                    <td class="quantity">{{.Quantity}}</td>
+                    <td class="price">${{printf "%.2f" .UnitPrice}}</td>
+                    <td class="price">${{printf "%.2f" .TotalPrice}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="summary-section">
+        <div class="summary-info">
+            <p>Total Items: <strong>{{.TotalItems}}</strong></p>
+        </div>
+        <div class="total-box">
+            <div class="total-label">Invoice Total</div>
+            <div class="total-amount">${{printf "%.2f" .TotalPrice}}</div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>PDF generated on {{.GeneratedAt}}</p>
+        <p class="thank-you">Thank you for your business!</p>
+    </div>
+</body>
+</html>

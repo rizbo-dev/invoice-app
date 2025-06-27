@@ -243,6 +243,63 @@ async function updateInvoiceStatus(status) {
     }
 }
 
+async function printInvoice() {
+    if (!currentInvoice) return;
+    
+    const printBtn = document.getElementById('print-btn');
+    const originalText = printBtn.textContent;
+    
+    try {
+        printBtn.disabled = true;
+        printBtn.textContent = 'Generating PDF...';
+        
+        const response = await fetch(`/api/invoices/${currentInvoice.id}/pdf`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to generate PDF');
+        }
+        
+        // Create blob from response
+        const blob = await response.blob();
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `invoice_${String(currentInvoice.id).padStart(6, '0')}.pdf`;
+        
+        // Trigger download
+        document.body.appendChild(a);
+        a.click();
+        
+        // Cleanup
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        // Show success message
+        showSuccessToast('PDF downloaded successfully');
+        
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Failed to generate PDF. Please try again.');
+    } finally {
+        printBtn.disabled = false;
+        printBtn.textContent = originalText;
+    }
+}
+
+function showSuccessToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
 function clearFilters() {
     document.getElementById('filter-form').reset();
     loadInvoices();
